@@ -5,20 +5,22 @@
 // Pointer to world object (to detect new game loads)
 #define RVA_WORLD_PTR     0x9941F0
 
-// Cheat menu flag (global in .data)
-#define RVA_CHEAT_MENU_FLAG 0x9D4F18
+// Cheat menu flag (global in SOVIET64.exe .data)
+#define RVA_CHEAT_MENU_FLAG     0x9D4F18
 
-// Offsets in the World object for cheat checkboxes
-#define OFFSET_SPEED_UP_CONSTRUCTION   0x14448
-#define OFFSET_SPEED_UP_RESEARCH       0x14449
-#define OFFSET_SPEED_UP_VEHICLES       0x1444a
-#define OFFSET_SPEED_UP_TREES          0x1444b
-#define OFFSET_SPEED_UP_POLLUTION      0x1444c
-#define OFFSET_SPEED_UP_WEAR           0x1444d
-#define OFFSET_LANDSCAPE_EDITOR        0x1090
-#define OFFSET_EXP_TRAFFIC             0x1444e
-#define OFFSET_CO_COOPERATE            0x14455
-#define OFFSET_TRAIN_ROUTE_SIGNAL      0x1444f
+// 8 consecutive cheat checkboxes in SOVIET64.exe .data (0x9E9358 - 0x9E935F)
+#define RVA_CHEAT_CONSTRUCTION  0x9E9358
+#define RVA_CHEAT_RESEARCH      0x9E9359
+#define RVA_CHEAT_VEHICLES      0x9E935A
+#define RVA_CHEAT_TREES         0x9E935B
+#define RVA_CHEAT_POLLUTION     0x9E935C
+#define RVA_CHEAT_WEAR          0x9E935D
+#define RVA_CHEAT_EXP_TRAFFIC   0x9E935E
+#define RVA_CHEAT_TRAIN_SIGNAL  0x9E935F
+
+// Other cheat checkboxes in SOVIET64.exe .data
+#define RVA_CHEAT_CO_COOPERATE  0x9E9365
+#define RVA_CHEAT_LANDSCAPE_ED  0x9D5FA0
 
 // Terrain render export for per-frame tick
 #define SYM_TERRAIN_RENDER "?Render@C3D_TERRAIN@@QEAAX_NPEAVC3D_CAMERA@@0HH@Z"
@@ -107,8 +109,10 @@ static void SendCheatKeystrokes()
     }
 }
 
-static void PatchCheatMemory(void* currentWorld)
+static void PatchCheatMemory(void)
 {
+    if (!g_exeBase) return;
+
     // Enable cheat menu flag (global flag in SOVIET64.exe .data)
     int* pCheatFlag = (int*)(g_exeBase + RVA_CHEAT_MENU_FLAG);
     if (ReadablePtr(pCheatFlag, sizeof(int)))
@@ -117,31 +121,38 @@ static void PatchCheatMemory(void* currentWorld)
         Logf("cheat_set  patched cheat menu memory (0x9D4F18 = 256)");
     }
 
-    if (currentWorld)
+    // 8 consecutive cheat flags from 0x9E9358 to 0x9E935F
+    BYTE* pCheats = (BYTE*)(g_exeBase + RVA_CHEAT_CONSTRUCTION);
+    if (ReadablePtr(pCheats, 8))
     {
-        BYTE* pWorld = (BYTE*)currentWorld;
-        
-        // Block of flags around 0x14448..0x14455
-        if (ReadablePtr(pWorld + OFFSET_SPEED_UP_CONSTRUCTION, 0x14456 - OFFSET_SPEED_UP_CONSTRUCTION))
-        {
-            pWorld[OFFSET_SPEED_UP_CONSTRUCTION] = g_speedUpConstruction ? 1 : 0;
-            pWorld[OFFSET_SPEED_UP_RESEARCH] = g_speedUpResearch ? 1 : 0;
-            pWorld[OFFSET_SPEED_UP_VEHICLES] = g_speedUpVehicleProduction ? 1 : 0;
-            pWorld[OFFSET_SPEED_UP_TREES] = g_speedUpGrowingTrees ? 1 : 0;
-            pWorld[OFFSET_SPEED_UP_POLLUTION] = g_speedUpPollution ? 1 : 0;
-            pWorld[OFFSET_SPEED_UP_WEAR] = g_speedUpWearAndTear ? 1 : 0;
-            pWorld[OFFSET_EXP_TRAFFIC] = g_experimentalTrafficPathfinding ? 1 : 0;
-            pWorld[OFFSET_CO_COOPERATE] = g_coCooperate ? 1 : 0;
-            pWorld[OFFSET_TRAIN_ROUTE_SIGNAL] = g_trainRouteSignal ? 1 : 0;
-        }
-
-        if (ReadablePtr(pWorld + OFFSET_LANDSCAPE_EDITOR, sizeof(BYTE)))
-        {
-            pWorld[OFFSET_LANDSCAPE_EDITOR] = g_landscapeEditorMode ? 1 : 0;
-        }
-
-        Logf("cheat_set  patched world cheat features via exact game offsets");
+        pCheats[0] = g_speedUpConstruction ? 1 : 0;            // 0x9E9358
+        pCheats[1] = g_speedUpResearch ? 1 : 0;                // 0x9E9359
+        pCheats[2] = g_speedUpVehicleProduction ? 1 : 0;       // 0x9E935A
+        pCheats[3] = g_speedUpGrowingTrees ? 1 : 0;            // 0x9E935B
+        pCheats[4] = g_speedUpPollution ? 1 : 0;               // 0x9E935C
+        pCheats[5] = g_speedUpWearAndTear ? 1 : 0;             // 0x9E935D
+        pCheats[6] = g_experimentalTrafficPathfinding ? 1 : 0; // 0x9E935E
+        pCheats[7] = g_trainRouteSignal ? 1 : 0;               // 0x9E935F
     }
+
+    // CO cooperate
+    BYTE* pCoop = (BYTE*)(g_exeBase + RVA_CHEAT_CO_COOPERATE);
+    if (ReadablePtr(pCoop, 1))
+    {
+        *pCoop = g_coCooperate ? 1 : 0;                        // 0x9E9365
+    }
+
+    // Landscape editor mode
+    BYTE* pLandscape = (BYTE*)(g_exeBase + RVA_CHEAT_LANDSCAPE_ED);
+    if (ReadablePtr(pLandscape, 1))
+    {
+        *pLandscape = g_landscapeEditorMode ? 1 : 0;           // 0x9D5FA0
+    }
+
+    Logf("cheat_set  applied cheat flags: constr=%d, rsch=%d, veh=%d, trees=%d, pol=%d, wear=%d, exp_traf=%d, train=%d, coop=%d, land=%d",
+         g_speedUpConstruction, g_speedUpResearch, g_speedUpVehicleProduction, g_speedUpGrowingTrees,
+         g_speedUpPollution, g_speedUpWearAndTear, g_experimentalTrafficPathfinding, g_trainRouteSignal,
+         g_coCooperate, g_landscapeEditorMode);
 }
 
 static void ReadSettings(void);
@@ -166,15 +177,18 @@ static void FastProcessCheats(void)
         g_memoryPatched = false;
         g_frameTimer = 0;
         
-        // Znovu načíst INI při každém načtení mapy
         ReadSettings();
     }
     
-    // We can apply the memory patch immediately when the world is valid
+    // Apply patch after a short frame delay (10 frames) so map loading routines don't overwrite it
     if (g_memoryPatch && !g_memoryPatched)
     {
-        PatchCheatMemory(currentWorld);
-        g_memoryPatched = true;
+        g_frameTimer++;
+        if (g_frameTimer >= 10)
+        {
+            PatchCheatMemory();
+            g_memoryPatched = true;
+        }
     }
 
     if (g_autoKeys && !g_keysSent)
