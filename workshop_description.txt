@@ -1,12 +1,24 @@
 [h1]Cheatset Plugin[/h1]
-A plugin for [b]TesmioLoader[/b] that automatically enables the game's internal cheat menu and its features on every map load, saving you from manually pressing C+H+E and clicking the checkboxes every time.
+A plugin for [b]TesmioLoader[/b] that automatically enables the game's internal cheat menu and your selected cheat functions on every map load, saving you from manually pressing C+H+E and clicking individual checkboxes every time.
 
 [h2]Features[/h2]
 [list]
-[*] [b]Auto-Activation[/b]: Automatically writes directly into the game's memory to enable the cheat menu features instantly when the world loads.
-[*] [b]Fully Configurable[/b]: Every cheat function can be toggled on or off in the INI file.
-[*] [b]Available Toggles[/b]: Speed up construction, Speed up research, Speed up vehicle production, Speed up growing trees, Speed up pollution, Speed up wear and tear, Experimental traffic pathfinding, and Train route signal.
-[*] [b]Native Integration[/b]: Uses exact memory offsets to seamlessly switch features on without brittle UI macros.
+[*] [b]Direct Memory Activation[/b]: Directly configures the game's internal world structures instantly upon map load.
+[*] [b]Full Granular Control[/b]: Every single toggle in the cheat menu can be individually set to 0 (disabled) or 1 (enabled) via the INI file.
+[*] [b]All 10 General Cheat Functions Supported[/b]:
+  [list]
+  [*] Speed up construction
+  [*] Speed up research
+  [*] Speed up vehicle production
+  [*] Speed up growing trees
+  [*] Speed up pollution
+  [*] Speed up wear and tear
+  [*] Landscape editor mode
+  [*] Experimental traffic pathfinding
+  [*] CO cooperate
+  [*] Train route signal
+  [/list]
+[*] [b]Vanilla Default Out-of-the-Box[/b]: Clean defaults matching standard game loading behavior (CO cooperate & Train route signal enabled, all accelerators disabled until you turn them on).
 [/list]
 
 [h2]Installation[/h2]
@@ -19,4 +31,4 @@ A plugin for [b]TesmioLoader[/b] that automatically enables the game's internal 
 [/list]
 
 [h2]Configuration[/h2]
-Edit [code]cheat_set.ini[/code] in your plugins folder to adjust which cheat functions you want automatically enabled. The file is fully commented in English.
+Edit [code]cheat_set.ini[/code] in your plugins folder to customize which cheat features activate automatically on load.
