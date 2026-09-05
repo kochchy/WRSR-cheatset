@@ -1,9 +1,13 @@
 # Cheatset Plugin
 
+[![Steam Workshop](https://img.shields.io/badge/Steam-Workshop-blue?logo=steam)](https://steamcommunity.com/sharedfiles/filedetails/?id=3796260594)
+
+**Download from Steam Workshop:** [Cheatset (ID: 3796260594)](https://steamcommunity.com/sharedfiles/filedetails/?id=3796260594)
+
 A plugin for TesmioLoader (Workers & Resources: Soviet Republic) that automatically activates the internal cheat menu (C+H+E) and your preferred cheat functions every time a map loads.
 
 ## Features
-* **Direct Memory-Level Activation**: Configures the game's internal `world` structures directly upon map load, avoiding brittle UI macros or fake keystrokes.
+* **Direct Memory-Level Activation**: Configures the game's internal memory directly upon map load, avoiding brittle UI macros or fake keystrokes.
 * **Complete Granular Control**: Configure each of the 10 cheat/debug functions via `cheat_set.ini`:
   * **Speed up construction**
   * **Speed up research**
