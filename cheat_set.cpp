@@ -144,6 +144,8 @@ static void PatchCheatMemory(void* currentWorld)
     }
 }
 
+static void ReadSettings(void);
+
 static void FastProcessCheats(void)
 {
     void* currentWorld = GetWorldPtr();
@@ -163,6 +165,9 @@ static void FastProcessCheats(void)
         g_keysSent = false;
         g_memoryPatched = false;
         g_frameTimer = 0;
+        
+        // Znovu načíst INI při každém načtení mapy
+        ReadSettings();
     }
     
     // We can apply the memory patch immediately when the world is valid
