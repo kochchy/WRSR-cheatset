@@ -8,6 +8,18 @@
 // Cheat menu flag (global in .data)
 #define RVA_CHEAT_MENU_FLAG 0x9D4F18
 
+// Offsets in the World object for cheat checkboxes
+#define OFFSET_SPEED_UP_CONSTRUCTION   0x14448
+#define OFFSET_SPEED_UP_RESEARCH       0x14449
+#define OFFSET_SPEED_UP_VEHICLES       0x1444a
+#define OFFSET_SPEED_UP_TREES          0x1444b
+#define OFFSET_SPEED_UP_POLLUTION      0x1444c
+#define OFFSET_SPEED_UP_WEAR           0x1444d
+#define OFFSET_LANDSCAPE_EDITOR        0x1090
+#define OFFSET_EXP_TRAFFIC             0x1444e
+#define OFFSET_CO_COOPERATE            0x14455
+#define OFFSET_TRAIN_ROUTE_SIGNAL      0x1444f
+
 // Terrain render export for per-frame tick
 #define SYM_TERRAIN_RENDER "?Render@C3D_TERRAIN@@QEAAX_NPEAVC3D_CAMERA@@0HH@Z"
 
@@ -17,16 +29,15 @@ static int g_enabled = 1;
 static int g_autoKeys = 0;
 static int g_memoryPatch = 1;
 
-// Cheat functions group 1 (0x9E9354)
 static int g_speedUpConstruction = 0;
 static int g_speedUpResearch = 0;
 static int g_speedUpVehicleProduction = 0;
 static int g_speedUpGrowingTrees = 0;
-
-// Cheat functions group 2 (0x9E9358)
 static int g_speedUpPollution = 0;
 static int g_speedUpWearAndTear = 0;
+static int g_landscapeEditorMode = 0;
 static int g_experimentalTrafficPathfinding = 0;
+static int g_coCooperate = 1;
 static int g_trainRouteSignal = 1;
 
 // ---------------------------------------------------------------- state
@@ -96,8 +107,9 @@ static void SendCheatKeystrokes()
     }
 }
 
-static void PatchCheatMemory()
+static void PatchCheatMemory(void* currentWorld)
 {
+    // Enable cheat menu flag (global flag in SOVIET64.exe .data)
     int* pCheatFlag = (int*)(g_exeBase + RVA_CHEAT_MENU_FLAG);
     if (ReadablePtr(pCheatFlag, sizeof(int)))
     {
@@ -105,25 +117,31 @@ static void PatchCheatMemory()
         Logf("cheat_set  patched cheat menu memory (0x9D4F18 = 256)");
     }
 
-    BYTE* pGroup1 = (BYTE*)(g_exeBase + 0x9E9354);
-    if (ReadablePtr(pGroup1, 4))
+    if (currentWorld)
     {
-        pGroup1[0] = g_speedUpConstruction ? 1 : 0;
-        pGroup1[1] = g_speedUpResearch ? 1 : 0;
-        pGroup1[2] = g_speedUpVehicleProduction ? 1 : 0;
-        pGroup1[3] = g_speedUpGrowingTrees ? 1 : 0;
-    }
+        BYTE* pWorld = (BYTE*)currentWorld;
+        
+        // Block of flags around 0x14448..0x14455
+        if (ReadablePtr(pWorld + OFFSET_SPEED_UP_CONSTRUCTION, 0x14456 - OFFSET_SPEED_UP_CONSTRUCTION))
+        {
+            pWorld[OFFSET_SPEED_UP_CONSTRUCTION] = g_speedUpConstruction ? 1 : 0;
+            pWorld[OFFSET_SPEED_UP_RESEARCH] = g_speedUpResearch ? 1 : 0;
+            pWorld[OFFSET_SPEED_UP_VEHICLES] = g_speedUpVehicleProduction ? 1 : 0;
+            pWorld[OFFSET_SPEED_UP_TREES] = g_speedUpGrowingTrees ? 1 : 0;
+            pWorld[OFFSET_SPEED_UP_POLLUTION] = g_speedUpPollution ? 1 : 0;
+            pWorld[OFFSET_SPEED_UP_WEAR] = g_speedUpWearAndTear ? 1 : 0;
+            pWorld[OFFSET_EXP_TRAFFIC] = g_experimentalTrafficPathfinding ? 1 : 0;
+            pWorld[OFFSET_CO_COOPERATE] = g_coCooperate ? 1 : 0;
+            pWorld[OFFSET_TRAIN_ROUTE_SIGNAL] = g_trainRouteSignal ? 1 : 0;
+        }
 
-    BYTE* pGroup2 = (BYTE*)(g_exeBase + 0x9E9358);
-    if (ReadablePtr(pGroup2, 4))
-    {
-        pGroup2[0] = g_speedUpPollution ? 1 : 0;
-        pGroup2[1] = g_speedUpWearAndTear ? 1 : 0;
-        pGroup2[2] = g_experimentalTrafficPathfinding ? 1 : 0;
-        pGroup2[3] = g_trainRouteSignal ? 1 : 0;
-    }
+        if (ReadablePtr(pWorld + OFFSET_LANDSCAPE_EDITOR, sizeof(BYTE)))
+        {
+            pWorld[OFFSET_LANDSCAPE_EDITOR] = g_landscapeEditorMode ? 1 : 0;
+        }
 
-    Logf("cheat_set  patched cheat menu features (0x9E9354, 0x9E9358)");
+        Logf("cheat_set  patched world cheat features via exact game offsets");
+    }
 }
 
 static void FastProcessCheats(void)
@@ -150,7 +168,7 @@ static void FastProcessCheats(void)
     // We can apply the memory patch immediately when the world is valid
     if (g_memoryPatch && !g_memoryPatched)
     {
-        PatchCheatMemory();
+        PatchCheatMemory(currentWorld);
         g_memoryPatched = true;
     }
 
@@ -197,7 +215,9 @@ static void ReadSettings(void)
     
     g_speedUpPollution = H->configInt(ini, "cheat_set", "speed_up_pollution", g_speedUpPollution);
     g_speedUpWearAndTear = H->configInt(ini, "cheat_set", "speed_up_wear_and_tear", g_speedUpWearAndTear);
+    g_landscapeEditorMode = H->configInt(ini, "cheat_set", "landscape_editor_mode", g_landscapeEditorMode);
     g_experimentalTrafficPathfinding = H->configInt(ini, "cheat_set", "experimental_traffic_pathfinding", g_experimentalTrafficPathfinding);
+    g_coCooperate = H->configInt(ini, "cheat_set", "co_cooperate", g_coCooperate);
     g_trainRouteSignal = H->configInt(ini, "cheat_set", "train_route_signal", g_trainRouteSignal);
 }
 
