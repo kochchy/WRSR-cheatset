@@ -1,0 +1,11 @@
+# Build artifacts
+*.obj
+*.dll
+*.lib
+*.exp
+*.pdb
+build/
+
+# Logs
+*.log
+log.html
